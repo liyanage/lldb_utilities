@@ -1,0 +1,3 @@
+
+command script import ~/git/lldb_utilities/lldb_utilities.py
+
