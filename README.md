@@ -9,7 +9,9 @@ Clone this repository or your personal fork to somewhere on your system:
 
     git clone http://github.com/liyanage/lldb_utilities/ ~/git/lldb_utilities
 
-Create a `.lldbinit` file in your home directory that loads the custom module:
+Create a `.lldbinit` file in your home directory that loads the custom module. If you
+cloned to the location given above, and you don’t already have a `.lldbinit` file, you
+can use the one that’s included like this:
 
     ln -s ~/git/lldb_utilities/lldbinit ~/.lldbinit
 
