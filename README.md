@@ -2,6 +2,7 @@ This is a collection of custom LLDB commands implemented using LLDB’s Python A
 
 Pull requests for improvements and additions are welcome. You can learn about the API at http://lldb.llvm.org/python-reference.html.
 
+
 # Installation
 
 Clone this repository or your personal fork to somewhere on your system:
@@ -13,51 +14,6 @@ Create a `.lldbinit` file in your home directory that loads the custom module:
     ln -s ~/git/lldb_utilities/lldbinit ~/.lldbinit
 
 Launch Xcode, run your target, drop into LLDB and try out the commands as shown below.
-
-# Usage
-
-## Help
-
-Below is a list of the commands that are currently available. You can issue
-
-    command script list
-
-to see a list. For each command, you can get help with LLDB’s `help` command, for example:
-
-    help poc
-
-## Options
-
-Some commands have option switches. You can shorten these as long as the shortened
-version is unambiguous, for example you can shorten
-
-    dump_nsdata -reveal -clipboard foo
-
-to
-
-    dump_nsdata -r -c foo
-
-## Whitespace and Quoting
-
-Some commands expect an expression that yields some object value, in this example `[NSData data]`:
-
-    dump_nsdata -c [NSData data]
-
-Parsing of command options follows shell rules (using Python’s [shlex](http://docs.python.org/2/library/shlex.html) module),
-which means that expressions with spaces like the one above get split up and you would
-normally have to add quotes:
-
-    dump_nsdata -c "[NSData data]"
-
-As a convenience, you can omit these quotes and the system will reassemble the expression
-by joining the pieces with spaces. In some cases that approach doesn’t produce the
-correct results:
-
-    dump_nsdata [NSData dataWithContentsOfFile:@"/foo   bar"]
-    
-In these cases, you should quote:
-
-    dump_nsdata '[NSData dataWithContentsOfFile:@"/foo   bar"]'
 
 
 # Commands
@@ -100,6 +56,53 @@ You can combine these options:
 ## tempdir
 
 This command prints and copies the return value of `NSTemporaryDirectory()`.
+
+
+# Usage Notes
+
+## Help
+
+You can see a list of commands with
+
+    command script list
+
+For each command, you can get help with LLDB’s `help` command, for example:
+
+    help poc
+
+## Options
+
+Some commands have option switches. You can shorten these as long as the shortened
+version is unambiguous, for example you can shorten
+
+    dump_nsdata -reveal -clipboard foo
+
+to
+
+    dump_nsdata -r -c foo
+
+## Whitespace and Quoting
+
+Some commands expect an expression that yields some object value, in this example `[NSData data]`:
+
+    dump_nsdata -c [NSData data]
+
+Parsing of command options follows shell rules (using Python’s [shlex](http://docs.python.org/2/library/shlex.html) module),
+which means that expressions with spaces like the one above get split up and you would
+normally have to add quotes:
+
+    dump_nsdata -c "[NSData data]"
+
+As a convenience, you can omit these quotes and the system will reassemble the expression
+by joining the pieces with spaces. In some cases that approach doesn’t produce the
+correct results:
+
+    dump_nsdata [NSData dataWithContentsOfFile:@"/foo   bar"]
+    
+In these cases, you should quote:
+
+    dump_nsdata '[NSData dataWithContentsOfFile:@"/foo   bar"]'
+
 
 # Extending lldb_utilities
 
