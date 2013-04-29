@@ -17,8 +17,6 @@ import os
 import re
 import sys
 
-#import AppKit
-
 
 class DebuggerCommand(object):
 
@@ -94,25 +92,6 @@ class DebuggerCommand(object):
     def configure_argument_parser(cls, parser):
         pass
 
-# Invoking external tools like "pbcopy" in this case sometimes crashes the inferior
-# because it forks an already multithreaded process, so we don't use it for now
-# and instead use copy_expression_result_to_clipboard above.
-#
-#     @classmethod
-#     def copy_string_to_clipboard(cls, string):
-#         pbcopy = subprocess.Popen('pbcopy', stdin=subprocess.PIPE)
-#         pbcopy.communicate(string)
-
-# Loading the AppKit/Foundation bridge modules into the Python interpreter running
-# inside LLDB doesn't work. If this gets fixed, we can switch to this
-# way of writing to the clipboard.
-#
-#     @classmethod
-#     def copy_string_to_clipboard(cls, string):
-#         pb = AppKit.NSPasteboard.generalPasteboard()
-#         pb.clearContents()
-#         pb.writeObjects_(AppKit.NSArray.arrayWithObject_(string))
-
 
 class DebuggerCommandDumpNsdata(DebuggerCommand):
     """Dumps NSData instances to a file"""
@@ -138,7 +117,6 @@ class DebuggerCommandDumpNsdata(DebuggerCommand):
             self.value_for_expression(cmd)
 
         if self.args.clipboard:
-#            self.copy_string_to_clipboard(self.args.output)
             self.copy_expression_result_to_clipboard('@"{}"'.format(self.args.output))
         
     @classmethod
@@ -156,7 +134,6 @@ class DebuggerCommandCopyObjectDescriptionToClipboard(DebuggerCommand):
         value = self.value_for_expression(self.command)
         object_description = value.GetObjectDescription()
         self.result.PutCString(object_description)
-#        self.copy_string_to_clipboard(object_description)
         self.copy_expression_result_to_clipboard('[({}) description]'.format(self.command))
 
     @classmethod
@@ -174,7 +151,6 @@ class DebuggerCommandTempdir(DebuggerCommand):
     def run(self):
         path = self.temporary_directory()
         self.result.PutCString(path)
-#        self.copy_string_to_clipboard(path)
         self.copy_expression_result_to_clipboard('@"{}"'.format(path))
 
     def needs_expression(self):
@@ -211,6 +187,7 @@ def register_handlers(debugger, namespace_name):
         cmd = 'command script add -f lldb_utilities.{} {}'.format(function_name, command_name)
         if debugger:
             debugger.HandleCommand(cmd)
+
 
 def __lldb_init_module(debugger, internal_dict):
     register_handlers(debugger, __name__)
