@@ -45,12 +45,12 @@ Some commands expect an expression that yields some object value, in this exampl
 
 Parsing of command options follows shell rules (using Python’s [shlex](http://docs.python.org/2/library/shlex.html) module),
 which means that expressions with spaces like the one above get split up and you would
-normally have to prevent that with quotes:
+normally have to add quotes:
 
     dump_nsdata -c "[NSData data]"
 
 As a convenience, you can omit these quotes and the system will reassemble the expression
-by joining the split pieces with spaces. In some cases that approach doesn’t produce the
+by joining the pieces with spaces. In some cases that approach doesn’t produce the
 correct results:
 
     dump_nsdata [NSData dataWithContentsOfFile:@"/foo   bar"]
@@ -61,6 +61,8 @@ In these cases, you should quote:
 
 
 # Commands
+
+Here’s an overview of the currently implemented commands.
 
 ## poc
 
@@ -81,14 +83,14 @@ it creates a temporary file inside the directory returned by `NSTemporaryDirecto
     (lldb) dump_nsdata [NSData data]
     /var/folders/j5/hjm915bx2gd9prgxz9c3fn700000gn/T/nsdata-N4c1ja.dat
 
-You can override that with the `-o` ("output") option:
+You can override that with the `-o` (“output”) option:
 
     (lldb) dump_nsdata -o ~/Desktop/foo.bin someData
     /Users/you/Desktop/foo.bin
 
-The `-r` ("reveal") option reveals the resulting file in the Finder.
+The `-r` (“reveal”) option reveals the resulting file in the Finder.
 
-The `-c` ("clipboard") option copies the path to the resulting file to the clipboard.
+The `-c` (“clipboard”) option copies the path to the resulting file to the clipboard.
 
 You can combine these options:
 
