@@ -176,7 +176,7 @@ def register_handlers(debugger, namespace_name):
         # to lldb's "command script add" doesn't work, so we create
         # a new dummy forwarding function and insert that into a 
         # known namespace. Passing that to LLDB works. Additionally,
-        # having a separate function for each command lets us assing
+        # having a separate function for each command lets us assign
         # the appropriate documentation to its docstring.
         function_proxy = invocation_proxy(v.handle_debugger_command)
         function_proxy.__doc__ = v.help_string()
