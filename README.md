@@ -33,6 +33,24 @@ to the clipboard so you can paste it into an e-mail message or bug report.
 
 the string “&lt;NSApplication: 0x100427590>” is now also on the clipboard.
 
+## pp
+
+This prints a slightly cleaned up version of the output of the built-in `p` command:
+
+    (lldb) p fooBar
+    (const char *) $3 = 0x000000010005be3a "someCString"
+    (lldb) p self->_foo
+    (BOOL) $4 = NO
+    (lldb) p NSApp
+    (void *) $5 = 0x0000000100a0aa90
+
+    (lldb) pp queueName
+    "someCString"
+    (lldb) pp self->_foo
+    NO
+    (lldb) pp NSApp
+    0x0000000100a0aa90
+
 ## dump_nsdata
 
 This command invokes `[data writeToFile:@"xxx" atomically:YES]` for you. Without any options,

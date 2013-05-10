@@ -63,7 +63,7 @@ class DebuggerCommand(object):
     def value_for_expression(self, expression):
         return self.frame().EvaluateExpression(expression)
 
-    def copy_expression_result_to_clipboard(self, expression):
+    def copy_object_expression_result_to_clipboard(self, expression):
         self.value_for_expression('(NSInteger)[[NSPasteboard generalPasteboard] clearContents]')
         self.value_for_expression('(BOOL)[[NSPasteboard generalPasteboard] writeObjects:@[{}]]'.format(expression))
 
@@ -117,7 +117,7 @@ class DebuggerCommandDumpNsdata(DebuggerCommand):
             self.value_for_expression(cmd)
 
         if self.args.clipboard:
-            self.copy_expression_result_to_clipboard('@"{}"'.format(self.args.output))
+            self.copy_object_expression_result_to_clipboard('@"{}"'.format(self.args.output))
         
     @classmethod
     def configure_argument_parser(cls, parser):
@@ -134,7 +134,7 @@ class DebuggerCommandCopyObjectDescriptionToClipboard(DebuggerCommand):
         value = self.value_for_expression(self.command)
         object_description = value.GetObjectDescription()
         self.result.PutCString(object_description)
-        self.copy_expression_result_to_clipboard('[({}) description]'.format(self.command))
+        self.copy_object_expression_result_to_clipboard('[({}) description]'.format(self.command))
 
     @classmethod
     def configure_argument_parser(cls, parser):
@@ -145,13 +145,39 @@ class DebuggerCommandCopyObjectDescriptionToClipboard(DebuggerCommand):
         return 'poc'
 
 
+class DebuggerCommandCopyDescriptionToClipboard(DebuggerCommand):
+    """Print the description of an expression and copy it to the clipboard (Like "p")"""
+
+    def run(self):
+        value = self.value_for_expression(self.command)
+        stream = lldb.SBStream()
+        value.GetDescription(stream)
+        description = stream.GetData()
+
+        (description,) = re.findall(r'^[^=]+= (.*)', description)
+        
+        readable_description = re.findall(r'^0x\w+ (.+)', description)
+        if readable_description:
+            description = readable_description[0]
+
+        self.result.PutCString(description)
+
+    @classmethod
+    def configure_argument_parser(cls, parser):
+        parser.add_argument('expression', nargs='+')
+
+    @classmethod
+    def command_name(cls):
+        return 'pp'
+
+
 class DebuggerCommandTempdir(DebuggerCommand):
     """Print the value of NSTemporaryDirectory() and copy it to the clipboard"""
 
     def run(self):
         path = self.temporary_directory()
         self.result.PutCString(path)
-        self.copy_expression_result_to_clipboard('@"{}"'.format(path))
+        self.copy_object_expression_result_to_clipboard('@"{}"'.format(path))
 
     def needs_expression(self):
         return False
