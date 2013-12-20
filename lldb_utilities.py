@@ -63,20 +63,20 @@ class DebuggerCommand(object):
     def value_for_expression(self, expression):
         return self.frame().EvaluateExpression(expression)
 
-    def copy_object_expression_result_to_clipboard(self, expression):        
+    def copy_object_expression_result_to_clipboard(self, expression):
         file_path = self.temporary_file_path(prefix='lldb-clipboard-', suffix='.dat')
-        
         cmd = '(BOOL)[({}) writeToFile:@"{}" atomically:YES]'.format(expression, file_path)
         value = self.value_for_expression(cmd)
         did_write = value.GetValueAsSigned()
         if not did_write:
             self.result.PutCString('Failed to write to {} (permission error?)'.format(self.args.output))
-            self.result.SetStatus (lldb.eReturnStatusFailed)
+            self.result.SetStatus(lldb.eReturnStatusFailed)
             return
-           
         
-        os.system('pbcopy < "{}"'.format(file_path))
-        os.system('rm -f "{}"'.format(file_path))
+        with open(file_path) as f:
+            po = subprocess.Popen(['pbcopy'], stdin=f)
+            po.communicate()
+        os.remove(file_path)
 
     @classmethod
     def handle_debugger_command(cls, debugger, command, result, internal_dict):
