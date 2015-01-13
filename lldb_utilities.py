@@ -20,9 +20,10 @@ import sys
 
 class DebuggerCommand(object):
 
-    def __init__(self, debugger, command, result, internal_dict):
+    def __init__(self, debugger, command, execution_context, result, internal_dict):
         self.debugger = debugger
         self.command = command
+        self.execution_context = execution_context
         self.result = result
         self.internal_dict = internal_dict
         self.expression = None
@@ -79,8 +80,8 @@ class DebuggerCommand(object):
         os.remove(file_path)
 
     @classmethod
-    def handle_debugger_command(cls, debugger, command, result, internal_dict):
-        cmd = cls(debugger, command, result, internal_dict)
+    def handle_debugger_command(cls, debugger, command, execution_context, result, internal_dict):
+        cmd = cls(debugger, command, execution_context, result, internal_dict)
         if not cmd.parse_command():
             return
         cmd.run()
