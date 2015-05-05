@@ -213,11 +213,9 @@ class DebuggerCommandPrintFlags(DebuggerCommand):
         value = None
 
         if triple.startswith('x86_64'):
-            # http://en.wikipedia.org/wiki/FLAGS_register
             flag_names = ['CF', None, 'PF', None, 'AF', None, 'ZF', 'SF', 'TF', 'IF', 'DF', 'OF', 'IOPL1', 'IOPL2', 'NT', None, 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID']
             status_register_name = 'rflags'
         elif triple.startswith('arm64'):
-            # http://en.wikipedia.org/wiki/ARM_architecture#Registers
             flag_names = [None for i in range(28)] + ['Q', 'V', 'C', 'Z', 'N']
             status_register_name = 'cpsr'
         else:
