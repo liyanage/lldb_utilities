@@ -86,6 +86,20 @@ It knows about the flags used by x86_64 and arm64:
 * for x86_64, see http://en.wikipedia.org/wiki/FLAGS_register,
 * for arm64, see http://en.wikipedia.org/wiki/ARM_architecture#Registers
 
+arm64 example:
+
+    (lldb) p/x $cpsr
+    (unsigned int) $1 = 0x60000000
+    (lldb) pflags
+    V C
+
+x86_64 example:
+
+    (lldb) p/x $rflags
+    (unsigned long) $2 = 0x0000000000000207
+    (lldb) pflags
+    CF PF IF
+
 
 # Usage Notes
 
