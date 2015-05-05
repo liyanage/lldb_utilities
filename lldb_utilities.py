@@ -54,7 +54,10 @@ class DebuggerCommand(object):
         return self.frame().EvaluateExpression('(NSString *)NSTemporaryDirectory()').GetObjectDescription()
 
     def frame(self):
-        return self.debugger.GetSelectedTarget().GetProcess().GetSelectedThread().GetSelectedFrame()
+        return self.target().GetProcess().GetSelectedThread().GetSelectedFrame()
+    
+    def target(self):
+        return self.debugger.GetSelectedTarget()
 
     def temporary_file_path(self, prefix=None, suffix=None):
         (handle, path) = tempfile.mkstemp(dir=self.temporary_directory(), prefix=prefix, suffix=suffix)
@@ -193,6 +196,44 @@ class DebuggerCommandTempdir(DebuggerCommand):
 
     def needs_expression(self):
         return False
+
+
+class DebuggerCommandPrintFlags(DebuggerCommand):
+    """Print the names of the enabled CPU status register flags.
+       For x86_64, see http://en.wikipedia.org/wiki/FLAGS_register,
+       for arm64, see http://en.wikipedia.org/wiki/ARM_architecture#Registers
+    """
+
+    def run(self):
+        triple = self.target().triple
+        frame = self.frame()
+
+        flag_names = None
+        status_register_name = None
+        value = None
+
+        if triple.startswith('x86_64'):
+            # http://en.wikipedia.org/wiki/FLAGS_register
+            flag_names = ['CF', None, 'PF', None, 'AF', None, 'ZF', 'SF', 'TF', 'IF', 'DF', 'OF', 'IOPL1', 'IOPL2', 'NT', None, 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID']
+            status_register_name = 'rflags'
+        elif triple.startswith('arm64'):
+            # http://en.wikipedia.org/wiki/ARM_architecture#Registers
+            flag_names = [None for i in range(28)] + ['Q', 'V', 'C', 'Z', 'N']
+            status_register_name = 'cpsr'
+        else:
+            print >> sys.stderr, 'Unknown architecture'
+            return
+
+        value = self.frame().register[status_register_name].unsigned
+        enabled_status_flags = [flag_name for i, flag_name in enumerate(flag_names) if value & (1 << i) and flag_name]
+        self.result.PutCString(' '.join(enabled_status_flags))
+
+    def needs_expression(self):
+        return False
+
+    @classmethod
+    def command_name(cls):
+        return 'pflags'
 
 
 def invocation_proxy(original_function):
