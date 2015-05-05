@@ -205,12 +205,9 @@ class DebuggerCommandPrintFlags(DebuggerCommand):
     """
 
     def run(self):
-        triple = self.target().triple
-        frame = self.frame()
-
         flag_names = None
         status_register_name = None
-        value = None
+        triple = self.target().triple
 
         if triple.startswith('x86_64'):
             flag_names = ['CF', None, 'PF', None, 'AF', None, 'ZF', 'SF', 'TF', 'IF', 'DF', 'OF', 'IOPL1', 'IOPL2', 'NT', None, 'RF', 'VM', 'AC', 'VIF', 'VIP', 'ID']
