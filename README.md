@@ -77,6 +77,15 @@ You can combine these options:
 
 This command prints and copies the return value of `NSTemporaryDirectory()`.
 
+## pflags
+
+Prints the names/mnemonics of the flag bits that are currently enabled in the CPU status register.
+
+It knows about the flags used by x86_64 and arm64:
+
+* for x86_64, see http://en.wikipedia.org/wiki/FLAGS_register,
+* for arm64, see http://en.wikipedia.org/wiki/ARM_architecture#Registers
+
 
 # Usage Notes
 
