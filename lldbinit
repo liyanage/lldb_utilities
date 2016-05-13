@@ -1,3 +1,9 @@
 
 command script import ~/git/lldb_utilities/lldb_utilities.py
+command script import lldb.macosx.heap
+command alias block expr struct Block_layout { void *isa; volatile int32_t flags; int32_t reserved;  void (*invoke)(void *, ...); }; *(struct Block_layout *)
+command alias bl breakpoint list
+command alias bd breakpoint delete
+
+#log enable -f /tmp/lldb-log.txt lldb api process
 
