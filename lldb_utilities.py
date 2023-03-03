@@ -16,9 +16,53 @@ import tempfile
 import os
 import re
 import sys
+import time
 
 
-class DebuggerCommand(object):
+
+# >>> lldb.thread.GetStopDescription(200)
+# 'EXC_RESOURCE (RESOURCE_TYPE_MEMORY: high watermark memory limit exceeded) (limit=1000 MB)'
+
+class IgnoreBreakpointByReasonDescriptionStopHook:
+    """
+    Use like this::
+
+        (lldb) target stop-hook add -P lldb_utilities.IgnoreBreakpointByReasonDescriptionStopHook -k ignore_string -v EXC_RESOURCE
+    """
+
+    def __init__(self, target: lldb.SBTarget, extra_args: lldb.SBStructuredData, _):
+        self.ignore_string = extra_args.GetValueForKey('ignore_string').GetStringValue(200)
+    
+    def handle_stop(self, exe_ctx: lldb.SBExecutionContext, stream: lldb.SBStream):
+        description_text = exe_ctx.thread.GetStopDescription(200)
+        if self.ignore_string in description_text:
+            stream.Print(f'{type(self)}: auto-continuing breakpoint because description text contains "{self.ignore_string}": "{description_text}"\n')
+            return False
+        else:
+            return True
+
+
+class IgnoreMemoryResourceExceptionBreakpointStopHook:
+    """
+    Use like this::
+
+        (lldb) target stop-hook add -P lldb_utilities.IgnoreMemoryResourceExceptionBreakpointStopHook
+    """
+
+    EXC_RESOURCE = 11
+
+    def __init__(self, target: lldb.SBTarget, extra_args: lldb.SBStructuredData, _):
+        pass
+    
+    def handle_stop(self, exe_ctx: lldb.SBExecutionContext, stream: lldb.SBStream):
+        if exe_ctx.thread.stop_reason == lldb.eStopReasonException:
+            if exe_ctx.thread.GetStopReasonDataAtIndex(0) == self.EXC_RESOURCE:
+                stream.Print(f'{type(self)}: auto-continuing breakpoint because it is a memory resource exception\n')
+                return False
+        return True
+
+
+class DebuggerCommand:
 
     def __init__(self, debugger, command, execution_context, result, internal_dict):
         self.debugger = debugger
@@ -60,9 +104,13 @@ class DebuggerCommand(object):
         return self.debugger.GetSelectedTarget()
 
     def temporary_file_path(self, prefix=None, suffix=None):
-        (handle, path) = tempfile.mkstemp(dir=self.temporary_directory(), prefix=prefix, suffix=suffix)
-        os.close(handle)
-        return path
+        try:
+            (handle, path) = tempfile.mkstemp(dir=self.temporary_directory(), prefix=prefix, suffix=suffix)
+            os.close(handle)
+            return path
+        except:
+            print('Unable to create temporary file', file=sys.stderr)
+            return None
 
     def value_for_expression(self, expression):
         return self.frame().EvaluateExpression(expression)
@@ -117,12 +165,22 @@ class DebuggerCommandDumpNsdata(DebuggerCommand):
         else:
             self.args.output = self.temporary_file_path(prefix='nsdata-', suffix='.dat')
 
+        can_write = True
+        if not self.args.output:
+            can_write = False
+            self.args.output = os.path.join(self.temporary_directory(), 'tmp.dat')
+
         cmd = '(BOOL)[({}) writeToFile:@"{}" atomically:YES]'.format(self.expression, self.args.output)
+
+        if not can_write:
+            self.result.PutCString('Unable to create temp file output in {}, try manually with:\np {}'.format(self.temporary_directory(), cmd))
+            return
+
         value = self.value_for_expression(cmd)
         did_write = value.GetValueAsSigned()
         if not did_write:
             self.result.PutCString('Failed to write to {} (permission error?)'.format(self.args.output))
-            self.result.SetStatus (lldb.eReturnStatusFailed)
+            self.result.SetStatus(lldb.eReturnStatusFailed)
             return
 
         self.result.PutCString(self.args.output)
@@ -216,7 +274,7 @@ class DebuggerCommandPrintFlags(DebuggerCommand):
             flag_names = [None for i in range(28)] + ['Q', 'V', 'C', 'Z', 'N']
             status_register_name = 'cpsr'
         else:
-            print >> sys.stderr, 'Unknown architecture'
+            print('Unknown architecture', file=sys.stderr)
             return
 
         value = self.frame().register[status_register_name].unsigned
